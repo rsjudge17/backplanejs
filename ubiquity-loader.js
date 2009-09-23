@@ -60,12 +60,20 @@ var baseDefaultPath = pathToModule("ubiquity-loader"),
 			try {
 				loader = new YAHOO.util.YUILoader();
 
-				loader.addModule({ name: "ubiquity-backplane-loader", type: "js",  fullpath: baseDefaultPath + "backplane-loader.js" });
-				if (mode.unitTest) {
-					loader.addModule({ name: "ubiquity-backplane-unit-test-loader", type: "js",  fullpath: baseDefaultPath + "_unit-tests/core/unit-test-loader.js" });
-					loader.require( "ubiquity-backplane-unit-test-loader" );
+				loader.addModule({ name: "backplane-notify", type: "js",  fullpath: "http://ubiquity-message.googlecode.com/svn/tags/0.5/lib/message-loader.js" });
+				loader.addModule({ name: "backplane-core",   type: "js",  fullpath: baseDefaultPath + "core-loader.js" });
+
+				if (mode.target) {
+					loader.addModule({ name: "backplane-rdfa",  type: "js",  fullpath: baseDefaultPath + "target-loader.js" });
+				} else {
+					loader.addModule({ name: "backplane-rdfa",  type: "js",  fullpath: baseDefaultPath + "rdfa-loader.js" });
 				}
-				loader.require( "ubiquity-backplane-loader" );
+				if (mode.unitTest) {
+					loader.addModule({ name: "backplane-core-unit-test-loader", type: "js",  fullpath: baseDefaultPath + "_unit-tests/core/unit-test-loader.js" });
+					loader.addModule({ name: "backplane-rdfa-unit-test-loader", type: "js",  fullpath: baseDefaultPath + "_unit-tests/rdfa/unit-test-loader.js" });
+					loader.require( "backplane-rdfa-unit-test-loader" );
+				}
+				loader.require( "backplane-notify", "backplane-core", "backplane-rdfa" );
 			  loader.insert();
 			} catch(e) {
 				setTimeout(waitForYahoo, 50);

@@ -31,16 +31,18 @@
 //
 (
 	function() {
-	 	var moduleBase = pathToModule("backplane-loader");
+	 	var moduleBase = pathToModule("core-loader");
 
-		loader.addModule({ name: "ub-array",           type: "js",  fullpath: moduleBase + "array.js" });
-		loader.addModule({ name: "ub-tokmap",          type: "js",  fullpath: moduleBase + "tokmap.js",
+		loader.addModule({ name: "ub-array",           type: "js",  fullpath: moduleBase + "core/array.js" });
+		loader.addModule({ name: "ub-tokmap",          type: "js",  fullpath: moduleBase + "core/tokmap.js",
 			requires: [ "ub-array" ] });
+		loader.addModule({ name: "ub-threads",        type: "js",  fullpath: moduleBase + "core/threads.js" });
 
-		loader.addModule({ name: "ub-uri",             type: "js",  fullpath: moduleBase + "uri.js" });
+		loader.addModule({ name: "ub-uri",             type: "js",  fullpath: moduleBase + "uri/uri.js" });
 
 		loader.addModule({ name: "ub-security",        type: "js",  fullpath: moduleBase + "security/security.js" });
-		loader.addModule({ name: "ub-io-submission-json", type: "js",  fullpath: moduleBase + "submission-json.js",
+
+		loader.addModule({ name: "ub-io-submission-json", type: "js",  fullpath: moduleBase + "io/submission-json.js",
 			requires: [ "ub-uri" ] });
 		loader.addModule({ name: "ub-file",            type: "js",  fullpath: moduleBase + "io/file.js",
 			requires: [ "ub-uri", "ub-security" ] });
@@ -52,7 +54,7 @@
 			requires: [ "ub-file", "ub-io-file" ] });
 
 	 	loader.require(
-			"ub-tokmap", "ub-array",
+			"ub-array", "ub-tokmap", "ub-threads",
 			"ub-uri",
 			"ub-security",
 			"ub-io-submission-json", "ub-file", "ub-io-file", "ub-dom3ls", "ub-io-scheme-file"
