@@ -14,92 +14,289 @@
    - See the License for the specific language governing permissions and
    - limitations under the License.
    -->
-<project name="ubiquity-xforms" default="test-rollup" basedir=".">
+<project name="backplanejs" default="help" basedir=".">
 	<description>
-		Ant project for the Ubiquity XForms javascript library, a cross-
-		browser implementation of the W3C's XForms 1.1 recommendation.
-		There do exist some other instances of build.xml at other levels
-		in the directory hierarchy, but the intention going forwards is
-		to gradually bring everything into this single top-level Ant
-		project.
+		Ant project for various backplanejs tasks.
 	</description>
 
-	<condition property="osfamily-windows">
-		<os family="windows" />
-	</condition>
+	<target name="help">
+		<echo>The following targets are supported:</echo>
+		<echo />
+		<echo>jslint:</echo>
+		<echo>  Run JSLint on all JavaScript files.</echo>
+		<echo />
+		<echo>tidy-js:</echo>
+		<echo>  Do some basic tidying up of source files, such as ensuring they use CRLF.</echo>
+		<echo />
+		<echo>prime-deploy:</echo>
+		<echo>  Prime the deployment directory, either for testing, or for a release.</echo>
+		<echo />
+		<echo>min:</echo>
+		<echo>  Compress the main JS and CSS files.</echo>
+		<echo />
+		<echo>release:</echo>
+		<echo>  Create a deployment archive, and then upload it to Google Code.</echo>
+	</target>
 
-	<property name="regression-suite" value="../../issues/driverPages/SeleniumTests/TestSuite.html" />
-	<property name="selenium-parameters-regression" value="auto=true&amp;save=true&amp;close=true&amp;test=${regression-suite}" />
+	<target name="-load.properties">
+		<property file="ant.properties" />
+		<property file="build.credentials.properties" />
+	</target>
 
-	<target name="create-rollup">
+	<target name="-init" depends="-load.properties">
+		<path id="ant.tasks.classpath">
+			<fileset dir="${tools.dir}">
+				<include name="ant-apache-bsf-1.7.1.jar" />
+				<include name="ant-googlecode-0.0.2.jar" />
+				<include name="bsf.jar" />
+				<include name="commons-logging-1.1.1.jar" />
+				<include name="yuicompressor-2.4.2.jar" />
+			</fileset>
+		</path>
+
+		<scriptdef
+			name="jslint"
+			src="${tools.dir}/fulljslint-for-ant.js" language="javascript"
+			classpathref="ant.tasks.classpath"
+		>
+			<attribute name="options" />
+			<element name="fileset" type="fileset" />
+		</scriptdef>
+
+		<taskdef
+			name="gcupload"
+			classname="net.bluecow.googlecode.ant.GoogleCodeUploadTask"
+			classpathref="ant.tasks.classpath"
+		/>
+	</target>
+
+	<target name="jslint" depends="-init">
 		<description>
-			Creates the rolled-up version of the library.
+			Run JSLint on the scripts.
 		</description>
 
-		<exec executable="cmd" dir="build" osfamily="windows" failonerror="true">
-			<arg value="/C" />
-			<arg value="prepare-distribution.bat" />
+		<jslint options="{ browser: true, devel: true, debug: true, evil: true, laxbreak: true, forin: true, sub: true, css: true, cap: true, on: true, fragment: true }">
+		<!-- jslint options="{passfail: false, white: false, laxbreak: true, browser: true, debug: false, devel: true, eqeqeq: false, evi: true, fragment: true, immed: false, nomen: false, on: true, onevar: false, plusplus: false, regexp: false, sub: true}" -->
+			<fileset dir="${src.dir}">
+				<!-- This collection is the same as in 'tidy-js' -->
+				<include name="**/*.js" />
+				<exclude name="_samples/**/*.js" />
+				<exclude name="_unit-tests/**/*.js" />
+				<exclude name="build/**/*.js" />
+				<exclude name="deploy/**/*.js" />
+				<exclude name="drupal/**/*.js" />
+				<exclude name="rdfa/_unit-tests/**/*.js" />
+				<exclude name="smil/**/*.js" />
+				<exclude name="third-party/uxf/build/**/*.js" />
+				<exclude name="third-party/uxf/samples/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/ajaxslt/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/backplane/_unit-tests/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/backplane/notify/assets/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/third-party/**/*.js" />
+				<exclude name="third-party/uxf/testsuite/**/*.js" />
+				<exclude name="third-party/uxf/unit-tests/**/*.js" />
+				<exclude name="third-party/yui/**/*.js" />
+				<exclude name="_samples/**/*.js" />
+				<exclude name="tools/**/*.js" />
+				<exclude name="_unit-tests/**/*.js" />
+			</fileset>
+ 		</jslint>
+	</target>
+
+	<target name="jslint-deploy" depends="-init">
+		<description>
+			Run JSLint on the scripts.
+		</description>
+
+		<jslint options="{ browser: true, devel: true, debug: true, evil: true, laxbreak: true, forin: true, sub: true, css: true, cap: true, on: true, fragment: true }">
+		<!-- jslint options="{passfail: false, white: false, laxbreak: true, browser: true, debug: false, devel: true, eqeqeq: false, evi: true, fragment: true, immed: false, nomen: false, on: true, onevar: false, plusplus: false, regexp: false, sub: true}" -->
+			<fileset dir="${deploy.dir}">
+				<include name="backplane.js" />
+			</fileset>
+ 		</jslint>
+	</target>
+
+	<target name="tidy-js" depends="-init">
+		<description>
+			Do some basic tidying up of JS files ready for JSLint.
+		</description>
+
+		<fixcrlf srcdir="${src.dir}" eol="crlf" eof="remove">
+			<!-- This collection is the same as in 'jslint' -->
+			<include name="**/*.js" />
+			<exclude name="_samples/**/*.js" />
+			<exclude name="_unit-tests/**/*.js" />
+			<exclude name="build/**/*.js" />
+			<exclude name="deploy/**/*.js" />
+			<exclude name="drupal/**/*.js" />
+			<exclude name="rdfa/_unit-tests/**/*.js" />
+			<exclude name="smil/**/*.js" />
+			<exclude name="third-party/uxf/build/**/*.js" />
+			<exclude name="third-party/uxf/samples/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/ajaxslt/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/backplane/notify/assets/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/backplane/_unit-tests/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/third-party/**/*.js" />
+			<exclude name="third-party/uxf/testsuite/**/*.js" />
+			<exclude name="third-party/uxf/unit-tests/**/*.js" />
+			<exclude name="third-party/yui/**/*.js" />
+			<exclude name="_samples/**/*.js" />
+			<exclude name="tools/**/*.js" />
+			<exclude name="_unit-tests/**/*.js" />
+		</fixcrlf>
+	</target>
+
+	<target name="-create-css" depends="-init, -create-js">
+		<description>
+			Create the CSS file. The only reason there is a dependency on
+			create-js is because we need the assets to have been copied.
+		</description>
+
+		<concat destfile="${output.dir}/${product.name}.css" force="no" eol="crlf">
+			<fileset dir="${output.dir}/assets">
+				<include name="**/*.css" />
+			</fileset>
+		</concat>
+	</target>
+
+	<target name="-create-js" depends="-init">
+		<description>
+			Create the JS file.
+		</description>
+
+		<exec executable="sprocketize" output="${output.dir}/${product.name}.js" failonerror="true" logError="true">
+			<arg line="-I . -I build -I third-party -I third-party/uxf/src -I third-party/uxf/src/lib -I third-party/uxf/src/lib/backplane" />
+			<arg value="copyright.txt" />
+			<arg value="${build.dir}/${product.name}.js" />
+			<arg value="-a${output.dir}/assets" />
 		</exec>
 	</target>
 
-	<target name="test-rollup-ff" depends="create-rollup">
+	<target name="prime-deploy" depends="-init, -create-js, -create-css">
 		<description>
-			Tests the rolled-up version of the library in Mozilla Firefox.
+			Create a set of deployment files, for testing or distribution.
 		</description>
 
-		<property name="selenium-runner-relative" value="testsuite/selenium/core/TestRunner.html" />
-		<property name="selenium-runner-rollup" location="build/dist/${selenium-runner-relative}" />
-		<property name="regression-results-ff-file" value="regression-results-ff.html" />
-		<property name="selenium-parameters-regression-ff" value="${selenium-parameters-regression}&amp;resultsUrl=../../${regression-results-ff-file}" />
+		<copy todir="${deploy.dir}" failonerror="true">
+			<fileset dir="${output.dir}">
+				<include name="${product.name}.js" />
+			</fileset>
+		</copy>
 
-		<exec executable="C:\Program Files\Mozilla Firefox\firefox.exe">
-			<arg value="-no-remote" />
-			<arg value="-P" />
-			<arg value="buildbot" />
-			<arg value="file:///${selenium-runner-rollup}?${selenium-parameters-regression-ff}" />
-		</exec>
-
-		<loadfile property="regression-results-ff" srcFile="build/dist/testsuite/${regression-results-ff-file}" />
-
-		<condition property="regression-ff-failed">
-			<matches string="${regression-results-ff}" pattern="&lt;td&gt;failed&lt;/td&gt;" />
-		</condition>
-
-		<fail message="Regression test suite failed on Firefox." status="1" if="regression-ff-failed" />
+		<copy todir="${deploy.dir}/assets" failonerror="true">
+			<fileset dir="${output.dir}">
+				<include name="${product.name}.css" />
+			</fileset>
+			<fileset dir="${output.dir}/assets">
+				<include name="bg-fader.gif" />
+				<include name="decorator.xml" />
+				<include name="instance.htc" />
+				<include name="onload.xml" />
+				<include name="select-deselected.png" />
+				<include name="select-selected.png" />
+				<include name="select1-deselected.png" />
+				<include name="select1-selected.png" />
+				<include name="thumb-n.gif" />
+			</fileset>
+		</copy>
 	</target>
 
-	<target name="test-rollup-ie" depends="create-rollup">
+	<target name="-min-css" depends="-init, prime-deploy">
 		<description>
-			Tests the rolled-up version of the library in Microsoft Internet Explorer.
+			Minify the CSS file.
 		</description>
 
-		<property name="selenium-runner-relative" value="testsuite/selenium/core/TestRunner.hta" />
-		<property name="selenium-runner-rollup" location="build/dist/${selenium-runner-relative}" />
-		<property name="regression-results-ie-file" value="regression-results-ie.html" />
+		<java
+			classname="com.yahoo.platform.yui.compressor.YUICompressor"
+			classpathref="ant.tasks.classpath"
+			fork="true"
+			failonerror="true"
+		>
+			<arg line="-o ${deploy.dir}/assets/${product.name}-min.css ${deploy.dir}/assets/${product.name}.css" />
+		</java>
 
-		<exec executable="cmd">
-			<arg value="/c" />
-			<arg value="&quot;testsuite\run-hta.bat&quot;" />
-			<arg value="${selenium-runner-rollup}" />
-			<arg value="${regression-suite}" />
-			<arg value="true" />
-			<arg value="true" />
-			<arg value="true" />
-			<arg value="../../${regression-results-ie-file}" />
-		</exec>
+		<!--
+			Browsers seem to be unable to use the compressed CSS file, so as
+			a temporary workaround we just copy the uncompressed file back over
+			the compressed one.
 
-		<loadfile property="regression-results-ie" srcFile="build/dist/testsuite/${regression-results-ie-file}" />
-
-		<condition property="regression-ie-failed">
-			<matches string="${regression-results-ie}" pattern="&lt;td&gt;failed&lt;/td&gt;" />
-		</condition>
-
-		<fail message="Regression test suite failed on Internet Explorer." status="1" if="regression-ie-failed" />
+			See issue 8.
+		-->
+		<copy
+			file="${deploy.dir}/assets/${product.name}.css"
+			tofile="${deploy.dir}/assets/${product.name}-min.css"
+			failonerror="true"
+			overwrite="true"
+		/>
 	</target>
 
-	<target name="test-rollup" depends="test-rollup-ff">
+	<target name="-min-js" depends="-init, prime-deploy">
 		<description>
-			Tests the rolled-up version of the library.
+			Minify the JS file.
 		</description>
+
+		<java
+			classname="com.yahoo.platform.yui.compressor.YUICompressor"
+			classpathref="ant.tasks.classpath"
+			fork="true"
+			failonerror="true"
+		>
+			<arg line="-o ${deploy.dir}/${product.name}-min.js ${deploy.dir}/${product.name}.js" />
+		</java>
+	</target>
+
+	<target name="min" depends="-init, -min-js, -min-css">
+		<description>
+			Minify everything, ready for distribution.
+		</description>
+	</target>
+
+	<target name="-create-deploy-package" depends="-init, min">
+		<zip destfile="${deploy.root.dir}/${deploy.package.name}">
+			<fileset dir="${deploy.dir}">
+				<include name="**/*" />
+				<exclude name="${product.name}.js" />
+				<exclude name="assets/${product.name}.css" />
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="release" depends="-init, -create-deploy-package">
+		<description>
+			Upload the compressed JS and CSS files.
+		</description>
+
+		<fail unless="gc.username" message="Missing property 'gc.username' from file 'build.credentials.properties'." />
+		<fail unless="gc.password" message="Missing property 'gc.password' from file 'build.credentials.properties'." />
+
+		<gcupload
+			username="${gc.username}"
+			password="${gc.password}"
+			projectname="${project.name}"
+			filename="${deploy.root.dir}/${deploy.package.name}"
+			targetfilename="${deploy.package.name}"
+			summary="${project.name} deployment package, version ${version.number}"
+			labels="Type-Archive, OpSys-All, Featured"
+		/>
+	</target>
+
+	<target name="upload-a-file-to-gc" depends="-init">
+		<description>
+			This is just a handy way to upload an individual file. It's not used in the
+			build process.
+		</description>
+
+		<fail unless="gc.username" message="Missing property 'gc.username' from file 'build.credentials.properties'." />
+		<fail unless="gc.password" message="Missing property 'gc.password' from file 'build.credentials.properties'." />
+
+		<gcupload
+			username="${gc.username}"
+			password="${gc.password}"
+			projectname="${project.name}"
+			filename="//Users/markbirbeck/Documents/svn/backplanejs/_samples/xforms/xforms-hint.html"
+			targetfilename="xforms-hint.html"
+			summary="XForms sample, demonstrating hint"
+			labels="Type-Executable, OpSys-All"
+		/>
 	</target>
 </project>
