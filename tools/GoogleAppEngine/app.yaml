@@ -1,0 +1,65 @@
+application: @project.name@
+version: @version.number@
+runtime: python
+api_version: 1
+
+handlers:
+- url: /backplane/assets/(.*\.htc)
+  static_files: @output.dir@/assets/\1
+  upload: @output.dir@/assets/(.*\.htc)
+  mime_type: text/xml
+
+- url: /backplanejs-(.*)/(.*)
+  static_files: backplanejs-\1/\2
+  upload: backplanejs-(.*)/(.*)
+
+- url: /backplane
+  static_dir: @output.dir@
+
+- url: /docs
+  static_dir: docs
+
+- url: /samples
+  static_dir: samples
+
+- url: /testsuite
+  static_dir: testsuite
+
+- url: /unit-tests
+  static_dir: unit-tests
+
+- url: /integration-tests
+  static_dir: @integration-tests.dir@
+
+- url: /tdd
+  static_dir: @tdd.dir@
+
+- url: /tdd/get.session.data
+  static_files: @tdd.dir@/get.session.data
+  upload: @tdd.dir@/get.session.data
+  mime_type: text/xml
+
+- url: /work
+  static_dir: ../work
+
+- url: /rdfa-viewer.html
+  static_files: rdfa-viewer.html
+  upload: rdfa-viewer.html
+
+- url: /.*
+  script: rdfa.py
+
+skip_files:
+- ^drupal/(.*)
+- ^work/(.*)
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?index\.yaml
+- ^(.*/)?index\.yml
+- ^(.*/)?#.*#
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?\.DS_Store
+- ^(.*/)?.*\.bak$
