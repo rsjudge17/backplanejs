@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="./ant2html.xsl"?>
+<!--
+   - Copyright (c) 2009 Mark Birbeck
+   -
+   - Licensed under the Apache License, Version 2.0 (the "License");
+   - you may not use this file except in compliance with the License.
+   - You may obtain a copy of the License at
+   -
+   -  http://www.apache.org/licenses/LICENSE-2.0
+   -
+   - Unless required by applicable law or agreed to in writing, software
+   - distributed under the License is distributed on an "AS IS" BASIS,
+   - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   - See the License for the specific language governing permissions and
+   - limitations under the License.
+   -->
+<project name="backplanejs" default="help" basedir=".">
+	<description>
+		Ant project for building and managing the backplanejs library.
+	</description>
+
+	<import file="tools/tools.xml" />
+
+	<!--
+		T A S K S
+		=========
+	-->
+	<target name="jslint">
+		<description>
+			Run JSLint on the scripts.
+		</description>
+
+		<jslint options="{ browser: true, devel: true, debug: true, evil: true, laxbreak: true, forin: true, sub: true, css: true, cap: true, on: true, fragment: true }">
+		<!-- jslint options="{passfail: false, white: false, laxbreak: true, browser: true, debug: false, devel: true, eqeqeq: false, evi: true, fragment: true, immed: false, nomen: false, on: true, onevar: false, plusplus: false, regexp: false, sub: true}" -->
+			<fileset dir="${src.dir}">
+				<!-- This collection is the same as in 'tidy-js' -->
+				<include name="**/*.js" />
+				<exclude name="_samples/**/*.js" />
+				<exclude name="build/**/*.js" />
+				<exclude name="deploy/**/*.js" />
+				<exclude name="drupal/**/*.js" />
+				<exclude name="rdfa/_unit-tests/**/*.js" />
+				<exclude name="smil/**/*.js" />
+				<exclude name="third-party/uxf/build/**/*.js" />
+				<exclude name="third-party/uxf/samples/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/ajaxslt/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/backplane/_unit-tests/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/backplane/notify/assets/**/*.js" />
+				<exclude name="third-party/uxf/src/lib/third-party/**/*.js" />
+				<exclude name="third-party/uxf/testsuite/**/*.js" />
+				<exclude name="third-party/uxf/unit-tests/**/*.js" />
+				<exclude name="third-party/${platform.name}/**/*.js" />
+				<exclude name="_samples/**/*.js" />
+				<exclude name="tools/**/*.js" />
+			</fileset>
+ 		</jslint>
+	</target>
+
+	<target name="jslint-deploy">
+		<description>
+			Run JSLint on the scripts.
+		</description>
+
+		<jslint options="{ browser: true, devel: true, debug: true, evil: true, laxbreak: true, forin: true, sub: true, css: true, cap: true, on: true, fragment: true }">
+		<!-- jslint options="{passfail: false, white: false, laxbreak: true, browser: true, debug: false, devel: true, eqeqeq: false, evi: true, fragment: true, immed: false, nomen: false, on: true, onevar: false, plusplus: false, regexp: false, sub: true}" -->
+			<fileset dir="${deploy.dir}">
+				<include name="backplane.js" />
+			</fileset>
+ 		</jslint>
+	</target>
+
+	<target name="tidy-js">
+		<description>
+			Do some basic tidying up of JS files ready for JSLint.
+		</description>
+
+		<fixcrlf srcdir="${src.dir}" eol="crlf" eof="remove">
+			<!-- This collection is the same as in 'jslint' -->
+			<include name="**/*.js" />
+			<exclude name="_samples/**/*.js" />
+			<exclude name="build/**/*.js" />
+			<exclude name="deploy/**/*.js" />
+			<exclude name="drupal/**/*.js" />
+			<exclude name="rdfa/_unit-tests/**/*.js" />
+			<exclude name="smil/**/*.js" />
+			<exclude name="third-party/uxf/build/**/*.js" />
+			<exclude name="third-party/uxf/samples/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/ajaxslt/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/backplane/notify/assets/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/backplane/_unit-tests/**/*.js" />
+			<exclude name="third-party/uxf/src/lib/third-party/**/*.js" />
+			<exclude name="third-party/uxf/testsuite/**/*.js" />
+			<exclude name="third-party/uxf/unit-tests/**/*.js" />
+			<exclude name="third-party/${platform.name}/**/*.js" />
+			<exclude name="_samples/**/*.js" />
+			<exclude name="tools/**/*.js" />
+		</fixcrlf>
+	</target>
+
+	<target name="-prime-deploy" depends="compile, test-compile">
+		<description>
+			Create a set of deployment files, for testing or distribution.
+		</description>
+
+		<copy todir="${deploy.dir}" failonerror="true">
+			<fileset dir="${tmp.dir}">
+				<include name="${product.name}.js" />
+			</fileset>
+		</copy>
+
+		<copy todir="${deploy.dir}/assets" failonerror="true">
+			<fileset dir="${build.dir}/assets" />
+			<fileset dir="${tmp.dir}">
+				<include name="${product.name}.css" />
+			</fileset>
+			<fileset dir="${tmp.dir}/assets">
+				<include name="bg-fader.gif" />
+				<include name="decorator.xml" />
+				<include name="decorate.htc" />
+				<include name="instance.htc" />
+				<include name="onload.xml" />
+				<include name="select-deselected.png" />
+				<include name="select-selected.png" />
+				<include name="select1-deselected.png" />
+				<include name="select1-selected.png" />
+				<include name="thumb-n.gif" />
+				<include name="lens/*" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="-min-css" depends="-prime-deploy">
+		<description>
+			Minify the CSS file.
+		</description>
+
+		<java
+			classname="com.yahoo.platform.yui.compressor.YUICompressor"
+			classpathref="ant.tasks.classpath"
+			fork="true"
+			failonerror="true"
+		>
+			<arg value="-o" />
+			<arg value="${deploy.dir}/assets/${product.name}-min.css" />
+			<arg value="${deploy.dir}/assets/${product.name}.css" />
+		</java>
+
+		<!--
+			Browsers seem to be unable to use the compressed CSS file, so as
+			a temporary workaround we just copy the uncompressed file back over
+			the compressed one.
+
+			See issue 8.
+		-->
+		<copy
+			file="${deploy.dir}/assets/${product.name}.css"
+			tofile="${deploy.dir}/assets/${product.name}-min.css"
+			failonerror="true"
+			overwrite="true"
+		/>
+	</target>
+
+	<target name="-min-js" depends="-prime-deploy">
+		<description>
+			Minify the JS file.
+		</description>
+
+		<java
+			classname="com.yahoo.platform.yui.compressor.YUICompressor"
+			classpathref="ant.tasks.classpath"
+			fork="true"
+			failonerror="true"
+		>
+			<arg value="-o" />
+			<arg value="${deploy.dir}/${product.name}-min.js" />
+			<arg value="${deploy.dir}/${product.name}.js" />
+		</java>
+	</target>
+
+	<target name="create-drupal-package">
+		<tar destfile="${drupal.output.dir}/${drupal.package.name}.tar">
+			<tarfileset dir="${drupal.dir}" prefix="${drupal.package.name}/" preserveLeadingSlashes="true" />
+		</tar>
+		<gzip destfile="${deploy.root.dir}/drupal/${drupal.package.name}.tar.gz" src="${drupal.output.dir}/${drupal.package.name}.tar"/>
+	</target>
+
+	<target name="release-drupal" depends="create-drupal-package">
+		<description>
+			Create a Drupal release by uploading the package to Google Code.
+		</description>
+
+		<fail unless="gc.username" message="Missing property 'gc.username' from file 'my.ant.properties'." />
+		<fail unless="gc.password" message="Missing property 'gc.password' from file 'my.ant.properties'." />
+
+		<gcupload
+			username="${gc.username}"
+			password="${gc.password}"
+			projectname="${project.name}"
+			filename="${deploy.root.dir}/drupal/${drupal.package.name}.tar.gz"
+			targetfilename="${drupal.package.name}.tar.gz"
+			summary="${project.name} Drupal module, version ${drupal.version.number}"
+			labels="Type-Archive, OpSys-All"
+		/>
+	</target>
+
+	<target name="-copy-testsuite-to-local-app-engine">
+		<copy todir="${deploy.root.dir}/testsuite" failonerror="true">
+			<fileset dir="${third-party.dir}/uxf/testsuite" />
+		</copy>
+
+		<replace dir="${deploy.root.dir}/testsuite"
+			token="/src/ubiquity-loader.js" value="${runtime.js.path}"
+		>
+			<include name="**/*.xhtml"/>
+			<include name="**/*.html"/>
+		</replace>
+
+		<replace dir="${deploy.root.dir}/testsuite/xforms" token="../../xforms/html" value="html" />
+	</target>
+
+	<!--
+		C A L L B A C K S
+		=================
+	-->
+	<target name="pre-site" description="Executes processes needed prior to the actual project site generation.">
+		<copy todir="${tmp.dir}/site-in/docs" failonerror="true" filtering="true">
+			<fileset dir="${rdfa.src.dir}" />
+		</copy>
+	</target>
+
+	<target
+		name="post-site"
+		description="Executes processes needed to finalize the site generation, and to prepare for site deployment."
+	>
+		<copy todir="${tmp.dir}/site-out/samples" failonerror="true">
+			<fileset dir="_samples" />
+		</copy>
+
+		<replace dir="${tmp.dir}/site-out/samples" token="../../deploy/backplanejs" value="/backplanejs">
+			<include name="**/*.html"/>
+		</replace>
+	</target>
+
+	<target name="-compile" description="Create combined JS and CSS files from sources.">
+		<!--
+			Created a combined JS file.
+		-->
+		<exec executable="${sprocketize.app.name}" output="${tmp.dir}/${product.name}.js" failonerror="true" logError="true">
+			<arg value="-I" />
+			<arg value="." />
+			<arg value="-I" />
+			<arg value="build" />
+			<arg value="-I" />
+			<arg value="third-party" />
+			<arg value="-I" />
+			<arg value="third-party/uxf/src" />
+			<arg value="-I" />
+			<arg value="third-party/uxf/src/lib" />
+			<arg value="-I" />
+			<arg value="third-party/uxf/src/lib/backplane" />
+			<arg value="copyright.txt" />
+			<arg value="${build.dir}/platform-${platform.name}.js" />
+			<arg value="${build.dir}/platform-ui-${platform.name}.js" />
+			<arg value="${build.dir}/${product.name}.js" />
+			<arg value="-a${output.dir}/assets" />
+		</exec>
+		<copy file="${tmp.dir}/${product.name}.js" tofile="${output.dir}/${product.name}.js" failonerror="true" filtering="true" />
+
+		<!--
+			Created a combined CSS file.
+		-->
+		<concat destfile="${output.dir}/assets/${product.name}.css" force="no" eol="crlf">
+			<fileset dir="${output.dir}/assets">
+				<include name="**/*.css" />
+				<exclude name="lens/*.css" />
+				<exclude name="${product.name}.css" />
+			</fileset>
+		</concat>
+	</target>
+
+	<target name="-test-compile">
+		<description>
+			Create the unit test files, by concatenating the individual
+			unit tests.
+		</description>
+
+		<!--
+			YUI Unit Test Runner
+		-->
+		<concat destfile="${unit-tests.dir}/unit-test-runner.js" eol="crlf">
+			<fileset dir="${src.dir}/third-party/yui">
+				<include name="yuitest.js" />
+			</fileset>
+			<fileset dir="${build.dir}/test">
+				<include name="unit-test-runner.js" />
+			</fileset>
+		</concat>
+
+		<!--
+			Backplane
+		-->
+		<concat destfile="${unit-tests.dir}/backplane/unit-tests.js" force="yes" eol="crlf">
+			<fileset dir="${src.dir}/third-party/uxf/src/lib/backplane/_unit-tests">
+				<include name="**/*.js" />
+				<exclude name="**/ut-dom3ls.js" />
+				<exclude name="**/ut-file.js" />
+				<exclude name="**/ut-fileio.js" />
+				<exclude name="**/ut-scheme-handler.js" />
+			</fileset>
+		</concat>
+		<copy file="${build.dir}/test/unit.html" tofile="${unit-tests.dir}/backplane/main.html" failonerror="true" />
+
+		<!--
+			Knowledgebase
+		-->
+		<concat destfile="${unit-tests.dir}/kb/unit-tests.js" eol="crlf">
+			<fileset dir="${src.dir}/kb/_unit-tests">
+				<include name="**/*.js" />
+			</fileset>
+		</concat>
+		<copy file="${build.dir}/test/unit.html" tofile="${unit-tests.dir}/kb/main.html" failonerror="true" />
+
+		<!--
+			RDFa
+		-->
+		<concat destfile="${unit-tests.dir}/rdfa/unit-tests.js" eol="crlf">
+			<fileset dir="${src.dir}/rdfa/_unit-tests">
+				<include name="**/*.js" />
+			</fileset>
+		</concat>
+		<copy file="${build.dir}/test/unit.html" tofile="${unit-tests.dir}/rdfa/main.html" failonerror="true" />
+
+		<!--
+			XForms
+		-->
+		<concat destfile="${unit-tests.dir}/xforms/unit-tests.js" eol="crlf">
+			<fileset dir="${src.dir}/third-party/uxf/unit-tests">
+				<include name="**/*.js" />
+				<exclude name="unit-test-loader.js" />
+			</fileset>
+			<fileset dir="${src.dir}/third-party/uxf/src/lib/functions">
+				<include name="**/ut-*.js" />
+			</fileset>
+		</concat>
+		<copy file="${build.dir}/test/unit.html" tofile="${unit-tests.dir}/xforms/main.html" failonerror="true" />
+	</target>
+
+	<target name="-pre-start-local-gae">
+		<copy todir="${gae.application.root}" failonerror="true" filtering="true">
+			<fileset dir="${backplanejs.tools.base.dir}/GoogleAppEngine" includes="app.yaml"/>
+		</copy>
+	</target>
+</project>

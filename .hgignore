@@ -1,0 +1,14 @@
+syntax: glob
+
+*.rej
+*.orig
+*.pyc
+Thumbs.db
+site
+target
+
+my.ant.properties
+
+build/output
+deploy
+work
