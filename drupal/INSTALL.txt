@@ -1,0 +1,13 @@
+REQUIREMENTS
+------------
+
+This module requires Drupal 6.x and PHP 5.1.x (or newer).
+
+
+INSTALLATION
+------------
+
+  1. See http://code.google.com/p/backplanejs/wiki/DeployingBackplanejs for
+     full instructions.
+
+  2. (See README.txt for information on submitting bug reports.)
