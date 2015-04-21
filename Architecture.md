@@ -1,0 +1,1 @@
+<wiki:gadget url="http://www.google.com/ig/modules/orgchart.xml" up\_title="Module Layout" up\_\_table\_query\_url="http://spreadsheets.google.com/tq?key=0AuNJN3q2lD3mdEVETmx0UGNLc1lXa1lycDliOFcySUE&range=A1:B5&gid=0" width="540">
